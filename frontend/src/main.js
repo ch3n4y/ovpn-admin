@@ -186,6 +186,17 @@ new Vue({
     serverRole: "master",
     lastSync: "unknown",
     modulesEnabled: [],
+    auth: {
+      enabled: false,
+      authenticated: false,
+      requiresTotp: false,
+      username: '',
+      loginUsername: 'admin',
+      loginPassword: '',
+      loginTotp: '',
+      loginError: '',
+      loginLoading: false,
+    },
     u: {
       newUserName: '',
       newUserPassword: '',
@@ -215,9 +226,8 @@ new Vue({
   watch: {
   },
   mounted: function () {
-    this.getUserData();
-    this.getServerSetting();
     this.filters.hideRevoked = this.$cookies.isKey('hideRevoked') ? (this.$cookies.get('hideRevoked') == "true") : false
+    this.checkAuth();
   },
   created() {
     var _this = this;
@@ -360,6 +370,72 @@ new Vue({
     rowActionFn: function(e) {
       this.username = e.target.dataset.username;
       this.$root.$emit(e.target.dataset.name);
+    },
+    loadAppData: function() {
+      this.getUserData();
+      this.getServerSetting();
+    },
+    checkAuth: function() {
+      var _this = this;
+      axios.request(axios_cfg('api/auth/status'))
+        .then(function(response) {
+          _this.auth.enabled = response.data.enabled;
+          _this.auth.authenticated = !response.data.enabled || response.data.authenticated;
+          _this.auth.requiresTotp = response.data.requiresTotp;
+          _this.auth.username = response.data.username || '';
+
+          if (_this.auth.authenticated) {
+            _this.loadAppData();
+          }
+        })
+        .catch(function() {
+          _this.auth.enabled = true;
+          _this.auth.authenticated = false;
+          _this.auth.loginError = '无法获取登录状态';
+        });
+    },
+    login: function() {
+      var _this = this;
+      _this.auth.loginLoading = true;
+      _this.auth.loginError = '';
+
+      axios.request(axios_cfg('api/auth/login', {
+        username: _this.auth.loginUsername,
+        password: _this.auth.loginPassword,
+        totp: _this.auth.loginTotp,
+      }, 'json'))
+        .then(function(response) {
+          _this.auth.enabled = response.data.enabled;
+          _this.auth.authenticated = response.data.authenticated;
+          _this.auth.requiresTotp = response.data.requiresTotp;
+          _this.auth.username = response.data.username || '';
+          _this.auth.loginPassword = '';
+          _this.auth.loginTotp = '';
+          _this.loadAppData();
+        })
+        .catch(function(error) {
+          _this.auth.authenticated = false;
+          if (error.response && error.response.data) {
+            _this.auth.loginError = typeof error.response.data === 'string' ? error.response.data : (error.response.data.message || '登录失败');
+          } else {
+            _this.auth.loginError = '登录失败';
+          }
+        })
+        .finally(function() {
+          _this.auth.loginLoading = false;
+        });
+    },
+    logout: function() {
+      var _this = this;
+      axios.request({
+        method: 'post',
+        url: 'api/auth/logout'
+      }).finally(function() {
+        _this.auth.authenticated = false;
+        _this.auth.username = '';
+        _this.rows = [];
+        _this.modulesEnabled = [];
+      });
     },
     getUserData: function() {
       var _this = this;

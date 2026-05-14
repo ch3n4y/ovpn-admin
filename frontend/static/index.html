@@ -7,7 +7,33 @@
 <body>
 <script src="dist/style.min.js"></script>
 <div id="app">
+  <div class="container mt-5" v-if="!auth.authenticated">
+    <div class="row justify-content-center">
+      <div class="col-md-5">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="mb-0">管理员登录</h4>
+          </div>
+          <div class="card-body">
+            <input type="text" class="form-control el-square modal-el-margin" placeholder="用户名" v-model="auth.loginUsername">
+            <input type="password" class="form-control el-square modal-el-margin" placeholder="密码" v-model="auth.loginPassword" @keyup.enter="login()">
+            <input v-if="auth.requiresTotp" type="text" class="form-control el-square modal-el-margin" placeholder="6 位动态验证码" v-model="auth.loginTotp" @keyup.enter="login()">
+            <div class="alert alert-danger mt-3 mb-0" v-if="auth.loginError">
+              {{ auth.loginError }}
+            </div>
+          </div>
+          <div class="card-footer text-center">
+            <button type="button" class="btn btn-success el-square" v-on:click.stop="login()" :disabled="auth.loginLoading">
+              {{ auth.loginLoading ? '登录中...' : '登录' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <vue-good-table
+    v-if="auth.authenticated"
     :columns="columns"
     :rows="filteredRows"
     :line-numbers="true"
@@ -17,6 +43,7 @@
       <button type="button" class="btn btn-sm btn-success el-square" v-show="serverRole == 'master'" v-on:click.stop="u.modalNewUserVisible=true">添加用户</button>
       <b-badget class="btn btn-sm btn-info el-square" v-if="serverRole == 'slave'">从节点 - 上次同步: {{ lastSync }}</b-badget>
       <button type="button" class="btn btn-sm btn-secondary el-square" v-on:click.stop="filters.hideRevoked=!filters.hideRevoked;this.$cookies.set('hideRevoked',!(this.$cookies.get('hideRevoked') == 'true'), -1);">{{ revokeFilterText }}</button>
+      <button type="button" class="btn btn-sm btn-outline-danger el-square ml-2" v-if="auth.enabled" v-on:click.stop="logout()">退出登录</button>
     </div>
     <div slot="emptystate" class="d-flex justify-content-center">
       <h4>还没有创建任何用户。</h4>

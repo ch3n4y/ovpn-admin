@@ -175,6 +175,10 @@ func genClientCert(privKey, caPrivKey *rsa.PrivateKey, ca *x509.Certificate, cn 
 // return PEM encoded CRL
 func genCRL(certs []*RevokedCert, ca *x509.Certificate, caKey *rsa.PrivateKey) (crlPEM *bytes.Buffer, err error) {
 	var revokedCertificates []pkix.RevokedCertificate
+	crlLifetimeDays, err := strconv.Atoi(*crlExpirationDays)
+	if err != nil {
+		return nil, fmt.Errorf("can't get CRL expiration value: %w", err)
+	}
 
 	for _, cert := range certs {
 		revokedCertificates = append(revokedCertificates, pkix.RevokedCertificate{SerialNumber: cert.Cert.SerialNumber, RevocationTime: cert.RevokedTime})
@@ -185,7 +189,7 @@ func genCRL(certs []*RevokedCert, ca *x509.Certificate, caKey *rsa.PrivateKey) (
 		RevokedCertificates: revokedCertificates,
 		Number:              big.NewInt(1),
 		ThisUpdate:          time.Now(),
-		NextUpdate:          time.Now().Add(180 * time.Hour * 24),
+		NextUpdate:          time.Now().Add(time.Duration(crlLifetimeDays) * 24 * time.Hour),
 		//ExtraExtensions: []pkix.Extension{},
 	}
 

@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -156,9 +157,27 @@ func fMove(src, dst string) error {
 	return nil
 }
 
+func safeJoin(baseDir, unsafeName string) (string, error) {
+	cleanBase := filepath.Clean(baseDir)
+	cleanPath := filepath.Clean(filepath.Join(cleanBase, unsafeName))
+
+	if cleanPath != cleanBase && !strings.HasPrefix(cleanPath, cleanBase+string(os.PathSeparator)) {
+		return "", fmt.Errorf("path escapes base dir: %s", unsafeName)
+	}
+
+	return cleanPath, nil
+}
+
+func shellQuote(value string) string {
+	return "'" + strings.ReplaceAll(value, "'", `'"'"'`) + "'"
+}
+
 func fDownload(path, url string, basicAuth bool) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
 	if basicAuth {
 		req.SetBasicAuth(*masterBasicAuthUser, *masterBasicAuthPassword)
 	}
@@ -266,12 +285,13 @@ func extractFromArchive(archive, path string) error {
 	// Write file header to the tar archive
 	uncompressedStream, err := gzip.NewReader(file)
 	if err != nil {
-		log.Fatal("extractFromArchive(): NewReader failed")
+		return fmt.Errorf("extractFromArchive(): NewReader failed: %w", err)
 	}
+	defer uncompressedStream.Close()
 
 	tarReader := tar.NewReader(uncompressedStream)
 
-	for true {
+	for {
 		header, err := tarReader.Next()
 
 		if err == io.EOF {
@@ -279,27 +299,37 @@ func extractFromArchive(archive, path string) error {
 		}
 
 		if err != nil {
-			log.Fatalf("extractFromArchive: Next() failed: %s", err.Error())
+			return fmt.Errorf("extractFromArchive: Next() failed: %w", err)
+		}
+
+		targetPath, err := safeJoin(path, header.Name)
+		if err != nil {
+			return err
 		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:
-			if err := os.Mkdir(path+"/"+header.Name, 0755); err != nil {
-				log.Fatalf("extractFromArchive: Mkdir() failed: %s", err.Error())
+			if err := os.MkdirAll(targetPath, 0755); err != nil {
+				return fmt.Errorf("extractFromArchive: MkdirAll() failed: %w", err)
 			}
 		case tar.TypeReg:
-			outFile, err := os.Create(path + "/" + header.Name)
+			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+				return fmt.Errorf("extractFromArchive: MkdirAll() failed: %w", err)
+			}
+			outFile, err := os.Create(targetPath)
 			if err != nil {
-				log.Fatalf("extractFromArchive: Create() failed: %s", err.Error())
+				return fmt.Errorf("extractFromArchive: Create() failed: %w", err)
 			}
 			if _, err := io.Copy(outFile, tarReader); err != nil {
-				log.Fatalf("extractFromArchive: Copy() failed: %s", err.Error())
+				_ = outFile.Close()
+				return fmt.Errorf("extractFromArchive: Copy() failed: %w", err)
 			}
-			outFile.Close()
+			if err := outFile.Close(); err != nil {
+				return fmt.Errorf("extractFromArchive: Close() failed: %w", err)
+			}
 
 		default:
-			log.Fatalf(
-				"extractFromArchive: uknown type: %s in %s", header.Typeflag, header.Name)
+			return errors.New(fmt.Sprintf("extractFromArchive: unknown type: %c in %s", header.Typeflag, header.Name))
 		}
 	}
 	return nil

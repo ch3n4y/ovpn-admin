@@ -12,6 +12,9 @@ services:
       OVPN_SERVER_NET: "192.168.100.0"
       OVPN_SERVER_MASK: "255.255.255.0"
       OVPN_PASSWD_AUTH: "true"
+      EASYRSA_CA_EXPIRE: "${EASYRSA_CA_EXPIRE:-3650}"
+      EASYRSA_CERT_EXPIRE: "${EASYRSA_CERT_EXPIRE:-3650}"
+      EASYRSA_CRL_DAYS: "${EASYRSA_CRL_DAYS:-3650}"
     cap_add:
       - NET_ADMIN
     ports:
@@ -34,10 +37,15 @@ services:
       OVPN_CCD: "true"
       OVPN_CCD_PATH: "/mnt/ccd"
       EASYRSA_PATH: "/mnt/easyrsa"
-      OVPN_SERVER: "127.0.0.1:7777:tcp"
+      OVPN_SERVER: "${OVPN_SERVER:-YOUR_SERVER_IP:7777:tcp}"
       OVPN_INDEX_PATH: "/mnt/easyrsa/pki/index.txt"
       OVPN_AUTH: "true"
       OVPN_AUTH_DB_PATH: "/mnt/easyrsa/pki/users.db"
+      CRL_EXPIRATION_DAYS: "${CRL_EXPIRATION_DAYS:-3650}"
+      ADMIN_AUTH: "${ADMIN_AUTH:-false}"
+      ADMIN_AUTH_USER: "${ADMIN_AUTH_USER:-admin}"
+      ADMIN_AUTH_PASSWORD: "${ADMIN_AUTH_PASSWORD:-}"
+      ADMIN_AUTH_TOTP_SECRET: "${ADMIN_AUTH_TOTP_SECRET:-}"
       LOG_LEVEL: "debug"
     network_mode: service:openvpn
     volumes:
