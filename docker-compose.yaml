@@ -6,6 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile.openvpn
     image: openvpn:local
+    restart: unless-stopped
     command: /etc/openvpn/setup/configure.sh
     environment:
       OVPN_SERVER_NET: "192.168.100.0"
@@ -24,6 +25,7 @@ services:
       context: .
       dockerfile: Dockerfile.ovpn-admin
     image: ovpn-admin:local
+    restart: unless-stopped
     command: /app/ovpn-admin
     environment:
       OVPN_DEBUG: "true"

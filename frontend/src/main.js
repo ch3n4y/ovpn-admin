@@ -47,22 +47,22 @@ new Vue({
   data: {
     columns: [
       {
-        label: 'Name',
+        label: '名称',
         field: 'Identity',
         // filterable: true,
       },
       {
-        label: 'Account Status',
+        label: '账号状态',
         field: 'AccountStatus',
         filterable: true,
       },
       {
-        label: 'Active Connections',
+        label: '活跃连接数',
         field: 'Connections',
         filterable: true,
       },
       {
-        label: 'Expiration Date',
+        label: '过期时间',
         field: 'ExpirationDate',
         type: 'date',
         dateInputFormat: 'yyyy-MM-dd HH:mm:ss',
@@ -72,7 +72,7 @@ new Vue({
         }
       },
       {
-        label: 'Revocation Date',
+        label: '吊销时间',
         field: 'RevocationDate',
         type: 'date',
         dateInputFormat: 'yyyy-MM-dd HH:mm:ss',
@@ -82,7 +82,7 @@ new Vue({
         }
       },
       {
-        label: 'Actions',
+        label: '操作',
         field: 'actions',
         sortable: false,
         tdClass: 'text-right',
@@ -93,7 +93,7 @@ new Vue({
     actions: [
       {
         name: 'u-change-password',
-        label: 'Change password',
+        label: '修改密码',
         class: 'btn-warning',
         showWhenStatus: 'Active',
         showForServerRole: ['master'],
@@ -101,7 +101,7 @@ new Vue({
       },
       {
         name: 'u-revoke',
-        label: 'Revoke',
+        label: '吊销',
         class: 'btn-warning',
         showWhenStatus: 'Active',
         showForServerRole: ['master'],
@@ -109,7 +109,7 @@ new Vue({
       },
       {
         name: 'u-delete',
-        label: 'Delete',
+        label: '删除',
         class: 'btn-danger',
         showWhenStatus: 'Revoked',
         showForServerRole: ['master'],
@@ -117,7 +117,7 @@ new Vue({
       },
       {
         name: 'u-delete',
-        label: 'Delete',
+        label: '删除',
         class: 'btn-danger',
         showWhenStatus: 'Expired',
         showForServerRole: ['master'],
@@ -125,7 +125,7 @@ new Vue({
       },
       {
         name: 'u-rotate',
-        label: 'Rotate',
+        label: '轮换证书',
         class: 'btn-warning',
         showWhenStatus: 'Revoked',
         showForServerRole: ['master'],
@@ -133,7 +133,7 @@ new Vue({
       },
       {
         name: 'u-rotate',
-        label: 'Rotate',
+        label: '轮换证书',
         class: 'btn-warning',
         showWhenStatus: 'Expired',
         showForServerRole: ['master'],
@@ -141,7 +141,7 @@ new Vue({
       },
       {
         name: 'u-unrevoke',
-        label: 'Unrevoke',
+        label: '恢复',
         class: 'btn-primary',
         showWhenStatus: 'Revoked',
         showForServerRole: ['master'],
@@ -157,7 +157,7 @@ new Vue({
       // },
       {
         name: 'u-download-config',
-        label: 'Download config',
+        label: '下载配置',
         class: 'btn-info',
         showWhenStatus: 'Active',
         showForServerRole: ['master', 'slave'],
@@ -165,7 +165,7 @@ new Vue({
       },
       {
         name: 'u-edit-ccd',
-        label: 'Edit routes',
+        label: '编辑路由',
         class: 'btn-primary',
         showWhenStatus: 'Active',
         showForServerRole: ['master'],
@@ -173,7 +173,7 @@ new Vue({
       },
       {
         name: 'u-edit-ccd',
-        label: 'Show routes',
+        label: '查看路由',
         class: 'btn-primary',
         showWhenStatus: 'Active',
         showForServerRole: ['slave'],
@@ -228,7 +228,7 @@ new Vue({
       axios.request(axios_cfg('api/user/revoke', data, 'form'))
       .then(function(response) {
         _this.getUserData();
-        _this.$notify({title: 'User ' + _this.username + ' revoked!', type: 'warn'})
+        _this.$notify({title: '用户 ' + _this.username + ' 已吊销', type: 'warn'})
       });
     })
     _this.$root.$on('u-unrevoke', function () {
@@ -237,7 +237,7 @@ new Vue({
       axios.request(axios_cfg('api/user/unrevoke', data, 'form'))
       .then(function(response) {
         _this.getUserData();
-        _this.$notify({title: 'User ' + _this.username + ' unrevoked!', type: 'success'})
+        _this.$notify({title: '用户 ' + _this.username + ' 已恢复', type: 'success'})
       });
     })
     _this.$root.$on('u-rotate', function () {
@@ -331,7 +331,7 @@ new Vue({
       return this.u.modalDeleteUserVisible ? {display: 'flex'} : {}
     },
     revokeFilterText: function() {
-      return this.filters.hideRevoked ? "Show revoked" : "Hide revoked"
+      return this.filters.hideRevoked ? "显示已吊销" : "隐藏已吊销"
     },
     filteredRows: function() {
       if (this.filters.hideRevoked) {
@@ -398,7 +398,7 @@ new Vue({
 
       axios.request(axios_cfg('api/user/create', data, 'form'))
       .then(function(response) {
-        _this.$notify({title: 'New user ' + _this.username + ' created', type: 'success'})
+        _this.$notify({title: '用户 ' + _this.username + ' 创建成功', type: 'success'})
         _this.u.modalNewUserVisible = false;
         _this.u.newUserName = '';
         _this.u.newUserPassword = '';
@@ -406,7 +406,7 @@ new Vue({
       })
       .catch(function(error) {
         _this.u.newUserCreateError = error.response.data;
-        _this.$notify({title: 'New user ' + _this.username + ' creation failed.', type: 'error'})
+        _this.$notify({title: '用户 ' + _this.username + ' 创建失败', type: 'error'})
 
       });
     },
@@ -421,12 +421,12 @@ new Vue({
       .then(function(response) {
         _this.u.ccdApplyStatus = 200;
         _this.u.ccdApplyStatusMessage = response.data;
-        _this.$notify({title: 'Ccd for user ' + _this.username + ' applied', type: 'success'})
+        _this.$notify({title: '用户 ' + _this.username + ' 的 CCD 已应用', type: 'success'})
       })
       .catch(function(error) {
         _this.u.ccdApplyStatus = error.response.status;
         _this.u.ccdApplyStatusMessage = error.response.data;
-        _this.$notify({title: 'Ccd for user ' + _this.username + ' apply failed ', type: 'error'})
+        _this.$notify({title: '用户 ' + _this.username + ' 的 CCD 应用失败', type: 'error'})
       });
     },
 
@@ -445,12 +445,12 @@ new Vue({
           _this.u.newPassword = '';
           _this.getUserData();
           _this.u.modalChangePasswordVisible = false;
-          _this.$notify({title: 'Password for user ' + _this.username + ' changed!', type: 'success'})
+          _this.$notify({title: '用户 ' + _this.username + ' 密码修改成功', type: 'success'})
         })
         .catch(function(error) {
           _this.u.passwordChangeStatus = error.response.status;
           _this.u.passwordChangeMessage = error.response.data.message;
-          _this.$notify({title: 'Changing password for user ' + _this.username + ' failed!', type: 'error'})
+          _this.$notify({title: '用户 ' + _this.username + ' 密码修改失败', type: 'error'})
         });
     },
 
@@ -469,12 +469,12 @@ new Vue({
           _this.u.newPassword = '';
           _this.getUserData();
           _this.u.modalRotateUserVisible = false;
-          _this.$notify({title: 'Certificates for user ' + _this.username + ' rotated!', type: 'success'})
+          _this.$notify({title: '用户 ' + _this.username + ' 的证书已轮换', type: 'success'})
         })
         .catch(function(error) {
           _this.u.roatateUserStatus = error.response.status;
           _this.u.rotateUserMessage = error.response.data.message;
-          _this.$notify({title: 'Rotate certificates for user ' + _this.username + ' failed!', type: 'error'})
+          _this.$notify({title: '用户 ' + _this.username + ' 的证书轮换失败', type: 'error'})
         })
     },
     deleteUser: function(user) {
@@ -491,12 +491,12 @@ new Vue({
           _this.u.newPassword = '';
           _this.getUserData();
           _this.u.modalDeleteUserVisible = false;
-          _this.$notify({title: 'User ' + _this.username + ' deleted!', type: 'success'})
+          _this.$notify({title: '用户 ' + _this.username + ' 已删除', type: 'success'})
         })
         .catch(function(error) {
           _this.u.deleteUserStatus = error.response.status;
           _this.u.deleteUserMessage = error.response.data.message;
-          _this.$notify({title: 'Deleting user ' + _this.username + ' failed!', type: 'error'})
+          _this.$notify({title: '用户 ' + _this.username + ' 删除失败', type: 'error'})
         })
     },
   }
